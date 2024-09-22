@@ -4,14 +4,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-script_path = path.dirname(path.abspath(__file__))
-
-def bmr_male(weight,height,age):
-    return 88.36 + 13.40 * weight + 4.799 * height - 5.677 * age
-
-def bmr_female(weight,height,age):
-    return 447.6 + 9.247 * weight + 3.098 * height - 4.330 * age
-
 def load_dict(dict_file,sep=';'):
     with open(dict_file,'r') as f:
         return dict([(l[0],float(l[1])) for l in [l.split(';') for l in f.readlines()]])
@@ -51,13 +43,13 @@ def analysis(input_df,columns,mean_std_stderr_columnnames):
     
     return df, mean_std_df, [columns, energy_columns, energy_percentage_columns]
 
-ref = load_dict(path.join(script_path,"nordic-nutrition-recommendations-transposed.csv"))
-kcal_pr_g = load_dict(path.join(script_path,"kcal_pr_g.csv"))
+ref = load_dict('work/nordic-nutrition-recommendations-transposed.csv')
+kcal_pr_g = load_dict('work/kcal_pr_g.csv')
+
+df = pd.read_csv('work/ffq.tsv',sep='\t')
+df = pd.read_csv('work/4-day-julian.csv',sep=';')
 
 macronutrient_columns = ['Alcohol (g)','Protein (g)','Carbs (g)','Fat (g)']
-
-df = pd.read_csv(path.join(script_path,'ffq.tsv'),sep='\t')
-df = pd.read_csv(path.join(script_path,'4-day-julian.csv'),sep=';')
 
 students = [3,4,22,34,66,35]
 df = df[df['Stud_Nr'].isin(students)][macronutrient_columns].apply(pd.to_numeric)
