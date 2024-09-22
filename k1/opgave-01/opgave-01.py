@@ -84,8 +84,9 @@ def analysis(input_df,columns,mean_std_stderr_columnnames):
     return df, mean_std_df, [columns, energy_columns, energy_percentage_columns]
 
 try:
-    data_dir = path.join( path.dirname(path.abspath(__file__)), 'work')
+    data_dir = path.dirname(path.abspath(__file__))
 except:
+    # we are in jupyter env.
     data_dir = 'work'
     
 
