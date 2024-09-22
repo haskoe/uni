@@ -2,6 +2,7 @@ import pandas as pd
 from os import path
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 script_path = path.dirname(path.abspath(__file__))
 
@@ -11,13 +12,14 @@ def bmr_male(weight,height,age):
 def bmr_female(weight,height,age):
     return 447.6 + 9.247 * weight + 3.098 * height - 4.330 * age
 
-df = pd.read_csv(path.join(script_path,'ffq.tsv'),sep='\t')
-ref = pd.read_csv(path.join(script_path,"nordic-nutrition-recommendations.csv"),sep=';')
+ffq = pd.read_csv(path.join(script_path,'ffq.tsv'),sep='\t')
+ref = pd.read_csv(path.join(script_path,"nordic-nutrition-recommendations-transposed.csv"),sep=';',index_col=0, header=None).T
 
 # macro nutrients columns
 macronutrient_columns = ['Alcohol (g)','Protein (g)','Carbs (g)','Fat (g)', 'Fiber (g)', 'Starch (g)']
 ALC, PROTEIN, CARB, FAT, FIBER, STARCH = macronutrient_columns
 TOTAL_ENERGY = 'Total energy'
+
 energy_columns = [c.split()[0] for c in macronutrient_columns]
 energy_percentage_columns = [c+'p' for c in energy_columns]
 
@@ -35,27 +37,30 @@ kcal_pr_g = {
 students = [3,4,22,34,66]
 
 # And subset of columns
-cols = [ALC, PROTEIN, CARB, FAT, FIBER, STARCH]
-df = df[df['Stud_Nr'].isin(students)][cols].apply(pd.to_numeric)
+ffq = ffq[ffq['Stud_Nr'].isin(students)][macronutrient_columns].apply(pd.to_numeric)
 
-# calculate energy from each column and store in new columns with ' (g)' removed
-for col in cols:
-    df[col.split()[0]] = df[col]*kcal_pr_g[col]
-print(df)
-# total energy for each student
-df[TOTAL_ENERGY] = df[energy_columns].sum(axis=1)
-print(df)
+# calculate energy, total energy and energy percentage for each column in trial dataset and reference dataset and store in 'energy_columns'
+df_mean_std_all = []
+for df in (ffq,):
+    # energy
+    for mc,ec in zip(macronutrient_columns,energy_columns):
+        df[ec] = df[mc]*kcal_pr_g[mc]
+        
+    # total energy
+    df[TOTAL_ENERGY] = df[energy_columns].sum(axis=1)
 
-# energy percentage
-for e,ep in zip(energy_columns,energy_percentage_columns):
-    df[ep] = df[e] / df[TOTAL_ENERGY]
-print(df)
+    # and energy percentage
+    for ec,epc in zip(energy_columns,energy_percentage_columns):
+        df[epc] = df[ec] / df[TOTAL_ENERGY]
 
-df_mean_std = df[energy_percentage_columns]
-result = pd.concat([df_mean_std, df_mean_std.describe().loc[['mean', 'std']]]).T
-print(result)
-result.plot(kind='bar',y='mean', yerr='std')
-#plt.show()
+    # mean and std dev
+    df_mean_std_all.append(df[energy_percentage_columns].describe().loc[['mean', 'std']].T)
+    #df = df.T
+ffq_mean_std = df_mean_std_all[0]
+ffq_mean_std.plot(kind='bar',y='mean', yerr='std')
+#print(ffq)
+#sns.barplot( data=ffq_mean_std, y='mean', yerr='std')
+plt.show()
 # dataframe with 
 
  #plt.bar(np.arange(subset.shape[1]), subset.mean(), yerr=[subset.mean()-subset.min(), subset.max()-subset.mean()], capsize=6)
