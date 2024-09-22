@@ -13,7 +13,10 @@ def bmr_female(weight,height,age):
     return 447.6 + 9.247 * weight + 3.098 * height - 4.330 * age
 
 ffq = pd.read_csv(path.join(script_path,'ffq.tsv'),sep='\t')
-ref = pd.read_csv(path.join(script_path,"nordic-nutrition-recommendations-transposed.csv"),sep=';',index_col=0, header=None).T
+ref = pd.read_csv(path.join(script_path,'nordic-nutrition-recommendations-transposed.csv'),sep=';').T
+with open(path.join(script_path,"nordic-nutrition-recommendations-transposed.csv"),'r') as f:
+    ref = dict([(l[0],float(l[1])) for l in [l.split(';') for l in f.readlines()]])
+# print(ref)
 
 # macro nutrients columns
 macronutrient_columns = ['Alcohol (g)','Protein (g)','Carbs (g)','Fat (g)', 'Fiber (g)', 'Starch (g)']
@@ -22,6 +25,13 @@ TOTAL_ENERGY = 'Total energy'
 
 energy_columns = [c.split()[0] for c in macronutrient_columns]
 energy_percentage_columns = [c+'p' for c in energy_columns]
+
+# for mc,ec in zip(macronutrient_columns,energy_percentage_columns):
+#     ref = [ref[c]]
+# print(ref.columns)
+# a=bb
+
+    # ref[ec] = ref[mc]
 
 # energy fractions
 kcal_pr_g = {
@@ -57,7 +67,17 @@ for df in (ffq,):
     df_mean_std_all.append(df[energy_percentage_columns].describe().loc[['mean', 'std']].T)
     #df = df.T
 ffq_mean_std = df_mean_std_all[0]
-ffq_mean_std.plot(kind='bar',y='mean', yerr='std')
+ax = ffq_mean_std.plot(ylim=(0, 1),kind='bar',y='mean', yerr='std', rot=0, fill=False)
+width=0.5
+# x = np.arange(len(ffq_mean_std.columns))
+x=0
+for i,c in enumerate(energy_percentage_columns):
+#     print(i,c,ref[c])
+    ax.hlines(ref[c], x - width/2, x + width/2, color='red')
+    x +=1
+
+#     plt.axhline(ref[c], xmin=0.5, xmax=1, color='red') #i,i+0.2,color='red')    
+    #break
 #print(ffq)
 #sns.barplot( data=ffq_mean_std, y='mean', yerr='std')
 plt.show()
