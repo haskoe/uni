@@ -15,13 +15,13 @@ def load_dict(dict_file,sep=';'):
     with open(dict_file,'r') as f:
         return dict([(l[0],float(l[1])) for l in [l.split(';') for l in f.readlines()]])
 
-def read_concat_csv(data_dir,seps=(';',',')):
+def read_concat_csv(data_dir,seps=('\t',';',',')):
     all_rows = []
     file_row_lengths = {}
-    for fname in [f for f in os.listdir(data_dir) if f.endswith('.csv')]:
+    for fname in [f for f in os.listdir(data_dir) if f.endswith('.csv') and not f=='temp.csv']:
         full_fname = path.join(data_dir,fname)
         with open(full_fname,'r') as f:
-            lines = f.readlines()
+            lines = [l.strip() for l in f.readlines() if l.strip()]
         if len(lines)<2:
             continue
         
@@ -30,19 +30,20 @@ def read_concat_csv(data_dir,seps=(';',',')):
                 break
         
         split_rows = [l.split(sep) for l in lines]
+        temp = [len(l) for l in split_rows]
         if len(set([len(row) for row in split_rows]))>1:
-            raise Exception(f'File {path.join(data_dir,fname)} has rows with different lengths')
+            raise Exception('File %s has rows with different lengths' % (full_fname,))
         
+        header = sep.join(split_rows[0])
         file_row_lengths[full_fname] = len(header)
         all_rows += [sep.join(row) for row in split_rows[1:]]
-        header = sep.join(split_rows[0])
 
     if all_rows:
-        if set(file_row_lengths.values())>1:
+        if len(set(file_row_lengths.values()))>1:
             raise Exception(f'Files have different row lengths: ...')
         
         temp_file = path.join(data_dir,'temp.csv')
-        with open(full_fname,'w') as f:
+        with open(temp_file,'w') as f:
             f.write('\n'.join([header] + all_rows))
             
         return pd.read_csv(temp_file,sep=sep)
@@ -93,15 +94,14 @@ kcal_pr_g = load_dict(path.join(data_dir,"kcal_pr_g.csv"))
 
 macronutrient_columns = ['Alcohol (g)','Protein (g)','Carbs (g)','Fat (g)']
 
-df = pd.read_csv(path.join(data_dir,'ffq.tsv'),sep='\t')
-df = pd.read_csv(path.join(data_dir,'4-day-julian.csv'),sep=';')
+for sub_dir,subset in (('ffq',[3,4,22,34,35]),('24-h',None),('4-day',None)):
+    df = read_concat_csv(path.join(data_dir,sub_dir))
+    if subset:
+        df = df[df['Stud_Nr'].isin(subset)][macronutrient_columns].apply(pd.to_numeric)
 
-students = [3,4,22,34,66,35]
-df = df[df['Stud_Nr'].isin(students)][macronutrient_columns].apply(pd.to_numeric)
+    mean_std_stderr_columnnames = ('Energy percentage','Standard deviation','Standard error')
 
-mean_std_stderr_columnnames = ('Energy percentage','Standard deviation','Standard error')
-
-result_df, result_mean_std_df, column_names = analysis( df, macronutrient_columns, mean_std_stderr_columnnames)
-print(result_mean_std_df)
-mean_stderr_ref_plot(result_mean_std_df, ref, column_names[-1], mean_std_stderr_columnnames)
-plt.show()
+    result_df, result_mean_std_df, column_names = analysis( df, macronutrient_columns, mean_std_stderr_columnnames)
+    print(result_mean_std_df)
+    mean_stderr_ref_plot(result_mean_std_df, ref, column_names[-1], mean_std_stderr_columnnames)
+    plt.show()
