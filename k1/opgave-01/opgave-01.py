@@ -102,6 +102,7 @@ for sub_dir,subset in (('ffq',[3,4,22,34,35]),('24-h',None),('4-day',None)):
     mean_std_stderr_columnnames = ('Energy percentage','Standard deviation','Standard error')
 
     result_df, result_mean_std_df, column_names = analysis( df, macronutrient_columns, mean_std_stderr_columnnames)
+    print(result_df)
     print(result_mean_std_df)
     mean_stderr_ref_plot(result_mean_std_df, ref, column_names[-1], mean_std_stderr_columnnames)
     plt.show()
