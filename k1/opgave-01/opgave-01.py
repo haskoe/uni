@@ -46,7 +46,10 @@ def read_concat_csv(data_dir,seps=('\t',';',',')):
         with open(temp_file,'w') as f:
             f.write('\n'.join([header] + all_rows))
             
-        return pd.read_csv(temp_file,sep=sep)
+        df = pd.read_csv(temp_file,sep=sep)
+        os.remove(temp_file)
+        
+        return df
 
 def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_columnnames):
     mean,std,stderr = mean_std_stderr_columnnames
@@ -58,8 +61,7 @@ def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_column
         x += 1
 
 TOTAL_ENERGY = 'Total energy'
-def analysis(input_df,columns,mean_std_stderr_columnnames):
-    mean,std,stderr = mean_std_stderr_columnnames
+def energy_calculation(input_df,columns):
     df = input_df.copy()
     energy_columns = [c.split()[0] for c in columns]
     energy_percentage_columns = [c+'p' for c in energy_columns]
@@ -76,13 +78,9 @@ def analysis(input_df,columns,mean_std_stderr_columnnames):
     for ec,epc in zip(energy_columns,energy_percentage_columns):
         df[epc] = 100 * df[ec] / df[TOTAL_ENERGY]
 
-    # mean and std dev
-    mean_std_df = df[energy_percentage_columns].describe().loc[['mean','std']].T
-    mean_std_df = mean_std_df.rename(columns={'mean':mean,'std': std})
-    mean_std_df[stderr] = mean_std_df[std] / math.sqrt(len(mean_std_df))
-    
-    return df, mean_std_df, [columns, energy_columns, energy_percentage_columns]
+    return df, [columns, energy_columns, energy_percentage_columns]
 
+## main script starts here
 try:
     data_dir = path.dirname(path.abspath(__file__))
 except:
@@ -90,20 +88,37 @@ except:
     data_dir = 'work'
     
 
-ref = load_dict(path.join(data_dir,"nordic-nutrition-recommendations-transposed.csv"))
+ref = load_dict(path.join(data_dir,"nordic-nutrition-recommendations-percentage.csv"))
 kcal_pr_g = load_dict(path.join(data_dir,"kcal_pr_g.csv"))
 
 macronutrient_columns = ['Alcohol (g)','Protein (g)','Carbs (g)','Fat (g)']
+micronutrient_columns = ['B1 (Thiamine) (mg)','B2 (Riboflavin) (mg)','B3 (Niacin) (mg)','B5 (Pantothenic Acid) (mg)','B6 (Pyridoxine) (mg)','B12 (Cobalamin) (µg)']
 
 for sub_dir,subset in (('ffq',[3,4,22,34,35]),('24-h',None),('4-day',None)):
-    df = read_concat_csv(path.join(data_dir,sub_dir))
-    if subset:
-        df = df[df['Stud_Nr'].isin(subset)][macronutrient_columns].apply(pd.to_numeric)
+    loaded_df = read_concat_csv(path.join(data_dir,sub_dir))
+    for cols, mean_col_name, calculate_energy in ((macronutrient_columns,'Energy percentage',True),(micronutrient_columns,'Mean intake', False)):
+        df = loaded_df.copy()
+        
+        # subset of students specified: remove alle students not in subset
+        if subset:
+            df = df[df['Stud_Nr'].isin(subset)]
 
-    mean_std_stderr_columnnames = ('Energy percentage','Standard deviation','Standard error')
+        # select the columns specified and make sure that values are converted to numeric
+        df = df[cols].apply(pd.to_numeric)
 
-    result_df, result_mean_std_df, column_names = analysis( df, macronutrient_columns, mean_std_stderr_columnnames)
-    print(result_df)
-    print(result_mean_std_df)
-    mean_stderr_ref_plot(result_mean_std_df, ref, column_names[-1], mean_std_stderr_columnnames)
-    plt.show()
+        calculate_mean_std_stderr_columns = cols # default is to calculate mean, std and stderr on the raw values
+        if calculate_energy:
+            df, column_names = energy_calculation( df, cols)
+            calculate_mean_std_stderr_columns = column_names[-1] # if energy is calculated mean, std and stderr on the calculated energy values
+        
+        # mean and std dev
+        mean_std_stderr_columnnames = (mean_col_name,'Standard deviation','Standard error')
+        std_col_name,stderr_col_name = mean_std_stderr_columnnames[1:]
+        mean_std_df = df[calculate_mean_std_stderr_columns].describe().loc[['mean','std']].T
+        mean_std_df = mean_std_df.rename(columns={'mean':mean_col_name,'std': mean_std_stderr_columnnames[1]})
+        mean_std_df[stderr_col_name] = mean_std_df[std_col_name] / math.sqrt(len(mean_std_df))
+
+        print(df)
+        print(mean_std_df)
+        mean_stderr_ref_plot(mean_std_df, ref, column_names[-1], mean_std_stderr_columnnames)
+        plt.show()
