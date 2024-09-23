@@ -13,7 +13,7 @@ def bmr_female(weight,height,age):
 
 def load_dict(dict_file,sep=';'):
     with open(dict_file,'r') as f:
-        return dict([(l[0],float(l[1])) for l in [l.split(';') for l in f.readlines()]])
+        return dict([(values[0],[float(v) for v in values[1:]]) for values in [l.split(';') for l in f.readlines()]])
 
 def read_concat_csv(data_dir,seps=('\t',';',',')):
     all_rows = []
@@ -65,13 +65,14 @@ def read_concat_csv(data_dir,seps=('\t',';',',')):
         
         return df
 
-def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_columnnames):
+def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_columnnames, y_max, chart_title):
     mean,std,stderr = mean_std_stderr_columnnames
-    ax = mean_stderr_df.plot(ylim=(0, 100),kind='bar',y=mean, yerr=stderr, rot=45, fill=False)
+    ax = mean_stderr_df.plot(ylim=(0, y_max),kind='bar',y=mean, yerr=stderr, rot=45, fill=False, title=chart_title)
     width=0.5
     x=0
     for i,c in enumerate(column_names):
-        ax.hlines(ref[c], x - width/2, x + width/2, color='red')
+        rv = np.mean(ref[c])
+        ax.hlines(rv, x - width/2, x + width/2, color='red')
         x += 1
 
 TOTAL_ENERGY = 'Total energy'
@@ -99,8 +100,9 @@ try:
     data_dir = path.dirname(path.abspath(__file__))
 except:
     # we are in jupyter env.
+    from IPython.display import display, HTML
+    display(HTML("<style>.container { width:100% !important; }</style>"))    
     data_dir = 'work'
-    
 
 ref = load_dict(path.join(data_dir,"nordic-nutrition-recommendations-percentage.csv"))
 kcal_pr_g = load_dict(path.join(data_dir,"kcal_pr_g.csv"))
@@ -110,7 +112,7 @@ micronutrient_columns = ['B1 (Thiamine) (mg)','B2 (Riboflavin) (mg)','B3 (Niacin
 
 for sub_dir,subset in (('ffq',[3,4,22,34,35]),('24-h',None),('4-day',None)):
     loaded_df = read_concat_csv(path.join(data_dir,sub_dir))
-    for cols, mean_col_name, calculate_energy in ((macronutrient_columns,'Energy percentage',True),(micronutrient_columns,'Mean intake', False)):
+    for cols, mean_col_name, calculate_energy, y_max, chart_title  in ((macronutrient_columns,'Energy percentage',True, 80, 'Macro nutrients'),(micronutrient_columns,'Mean intake', False, 50, 'Micro nutrients')):
         df = loaded_df.copy()
         
         # subset of students specified: remove alle students not in subset
@@ -134,5 +136,5 @@ for sub_dir,subset in (('ffq',[3,4,22,34,35]),('24-h',None),('4-day',None)):
 
         print(df)
         print(mean_std_df)
-        mean_stderr_ref_plot(mean_std_df, ref, column_names[-1], mean_std_stderr_columnnames)
+        mean_stderr_ref_plot(mean_std_df, ref, calculate_mean_std_stderr_columns, mean_std_stderr_columnnames, y_max, chart_title)
         plt.show()
