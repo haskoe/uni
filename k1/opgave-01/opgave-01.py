@@ -53,7 +53,7 @@ def read_concat_csv(data_dir,seps=('\t',';',',')):
 
 def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_columnnames):
     mean,std,stderr = mean_std_stderr_columnnames
-    ax = mean_stderr_df.plot(ylim=(0, 100),kind='bar',y=mean, yerr=stderr, rot=0, fill=False)
+    ax = mean_stderr_df.plot(ylim=(0, 100),kind='bar',y=mean, yerr=stderr, rot=45, fill=False)
     width=0.5
     x=0
     for i,c in enumerate(column_names):
