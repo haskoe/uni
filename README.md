@@ -1,3 +1,5 @@
+https://www.statsmodels.org/stable/examples/notebooks/generated/wls.html
+
 II. Tasks:
 Answer the questions below by using the data in the file mentioned above. Create PowerPoint
 slides that address the questions below so that you can present the answers in the afternoon
