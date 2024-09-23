@@ -22,6 +22,8 @@ def read_concat_csv(data_dir,seps=('\t',';',',')):
         full_fname = path.join(data_dir,fname)
         with open(full_fname,'r') as f:
             lines = [l.strip() for l in f.readlines() if l.strip()]
+        
+        # return if csv contains less than two rows (empty, assuming that the first row is the header)
         if len(lines)<2:
             continue
         
@@ -29,24 +31,36 @@ def read_concat_csv(data_dir,seps=('\t',';',',')):
             if len(lines[1].split(sep))>1:
                 break
         
+        # ',' => '.' if separator is not a comma
+        if sep != ',':
+            lines = [l.replace(',','.')  for l in lines]
+
+        # split and check that all lines have equal no. of cells        
         split_rows = [l.split(sep) for l in lines]
         temp = [len(l) for l in split_rows]
         if len(set([len(row) for row in split_rows]))>1:
             raise Exception('File %s has rows with different lengths' % (full_fname,))
         
         header = sep.join(split_rows[0])
+        
+        # save no. of cells for file for later check
         file_row_lengths[full_fname] = len(header)
         all_rows += [sep.join(row) for row in split_rows[1:]]
 
     if all_rows:
+        # we have data, all files must have equal no. of cells, if not throw exception
         if len(set(file_row_lengths.values()))>1:
             raise Exception(f'Files have different row lengths: ...')
-        
+
+        # save in one file with on header and data rows for all input files
         temp_file = path.join(data_dir,'temp.csv')
         with open(temp_file,'w') as f:
             f.write('\n'.join([header] + all_rows))
             
+        # load dataframe
         df = pd.read_csv(temp_file,sep=sep)
+        
+        # no need for temp file => remove it
         os.remove(temp_file)
         
         return df
