@@ -19,6 +19,9 @@ def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_column
         ax.hlines(rv, x - width/2, x + width/2, color='red')
         x += 1
 
+def percentage_as_str(v1,v2):
+    return  f'{(100*float(v1)/float(v2)):.1f}'
+
 def read_csv(fname,sep='\t'):
     return pd.read_csv(path.join(data_dir,fname),sep=sep)
 
@@ -56,6 +59,9 @@ GENDER_COLNAME='Sex'
 STDDEV_COLNAME='std'
 STDERR_COLNAME='stderr'
 MEAN_COLNAME='mean'
+MALE='male'
+FEMALE='female'
+BOTH='same RI'
 
 df_ri = read_csv('ri.csv')
 kcal_pr_g = load_dict(path.join(data_dir,"kcal_pr_g.csv"))
@@ -64,27 +70,51 @@ kcal_pr_g = load_dict(path.join(data_dir,"kcal_pr_g.csv"))
 micronutrient_columns = ['B1 (Thiamine) (mg)','B2 (Riboflavin) (mg)','B3 (Niacin) (mg)','B5 (Pantothenic Acid) (mg)','B6 (Pyridoxine) (mg)','B12 (Cobalamin) (µg)']
 
 
-student_subset = [str(i) for i in range(200) if i != 11]
+student_subset = [str(i) for i in range(200)]
 exclude = {
     'ffq': [],
-    '4-days': [5,11,39,25],
+    '4-days': [], #5,11,39,25],
     '24-hour': []
 }
-for study in ('ffq','24-hour','4-days'):
+
+# list with lists for each nutrient for each study:
+# FFQ [B1 female count below, B2 female count low_, ...]
+# FFQ [B1 male count below, B2 male count low_, ...]
+# 24-h [B1 female count below, B2 female count low_, ...]
+
+df_below_data = dict([(c,[]) for c in micronutrient_columns])
+studies = ('ffq','24-hour','4-days')
+for study in studies:
     loaded_df = read_csv(f'{study}.csv')
     loaded_df[STUDENT_NO_COLNAME] = loaded_df[STUDENT_NO_COLNAME].astype(str)
     loaded_df[GENDER_COLNAME] = loaded_df[GENDER_COLNAME].map(lambda v: v.strip().lower())
     resulting_subset = [n for n in student_subset if not int(n) in exclude[study]]
     loaded_df = loaded_df[loaded_df[STUDENT_NO_COLNAME].isin(resulting_subset)].reset_index(drop=True) # reindex is important !!
+    
     for columns,calculate_energy,mean_legend in ((micronutrient_columns,False,'Mean RI fraction'),): #(macronutrient_columns,True)):
         df = pd.concat([loaded_df[GENDER_COLNAME], loaded_df[columns].replace(',', '.',regex=True).astype(float)],axis=1) # necessary as decimal separator in CSV files is a mixture of commas and dots
-        
+
         # for each input column add a new fraction column
         fraction_columns = [c+'f' for c in columns]
+        gender_below_dict = { FEMALE: [], MALE:[]}
         for column, fraction_column in zip(columns,fraction_columns):
+            ri = df_ri[column]
+            identical_ri = len(set(ri.values[:2])) == 1
+            
             # lookup ri for each student
             df_student_ri = df.merge(df_ri, on=[GENDER_COLNAME], how = 'right')[column + '_y']
             df[fraction_column] = df[column] / df_student_ri
+            df_frac_notna = df[df[fraction_column].notna()==True]
+            if identical_ri:
+                below = len(df_frac_notna[df_frac_notna[fraction_column]<1])
+                df_below_data[column].append(f'Same RI: {below}/{total}={percentage_as_str(below,total)}%')
+            else:
+                res =[]
+                for gender in (FEMALE, MALE):
+                    below = len(df_frac_notna[(df_frac_notna[GENDER_COLNAME]==gender) & (df_frac_notna[fraction_column]<1)])
+                    total = len(df_frac_notna[df_frac_notna[GENDER_COLNAME]==gender])
+                    res.append(f'{gender}: {below}/{total}={percentage_as_str(below,total)}%')
+                df_below_data[column].append(', '.join(res))
 
         # calculate mean, STDDEV_COLNAME and stderr
         mean_std_df = df[fraction_columns].describe().loc[[MEAN_COLNAME,STDDEV_COLNAME]].T
@@ -92,5 +122,11 @@ for study in ('ffq','24-hour','4-days'):
         mean_std_df[STDERR_COLNAME] = mean_std_df[STDDEV_COLNAME] / math.sqrt(len(mean_std_df))
 
         print(mean_std_df)
-        ax = mean_std_df.plot(ylim = (0,3), kind ='bar', y=mean_legend, yerr=STDERR_COLNAME, rot=45, fill=False, title=f'{study} - B1-B12 mean RI fractions')
+        ax = mean_std_df.plot(ylim = (0,10), kind ='bar', y=mean_legend, yerr=STDERR_COLNAME, rot=45, fill=False, title=f'{study} - B1-B12 mean RI fractions')
         plt.show()
+
+# below RI dataframe
+data = [[c] + df_below_data[c] for c in columns]
+df_below_ri = pd.DataFrame(columns = ['Nutrient'] + list(studies), data = data)
+print('DAM methods')
+print(df_below_ri)
