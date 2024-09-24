@@ -80,11 +80,6 @@ exclude = {
     '24-hour': []
 }
 
-# list with lists for each nutrient for each study:
-# FFQ [B1 female count below, B2 female count low_, ...]
-# FFQ [B1 male count below, B2 male count low_, ...]
-# 24-h [B1 female count below, B2 female count low_, ...]
-
 df_below_data = dict([(c,[]) for c in micronutrient_columns])
 studies = ('ffq','24-hour','4-days')
 df_dam_charts = []
@@ -95,7 +90,7 @@ for study in studies:
     loaded_df[STUDENT_NO_COLNAME] = loaded_df[STUDENT_NO_COLNAME].astype(str)
     loaded_df[GENDER_COLNAME] = loaded_df[GENDER_COLNAME].map(lambda v: v.strip().lower())
     resulting_subset = [n for n in student_subset if not int(n) in exclude[study]]
-    loaded_df = loaded_df[loaded_df[STUDENT_NO_COLNAME].isin(resulting_subset)].reset_index(drop=True) # reindex is important !!
+    #loaded_df = loaded_df[loaded_df[STUDENT_NO_COLNAME].isin(resulting_subset)].reset_index(drop=True) # reindex is important !!
     
     for columns,calculate_energy,mean_legend in ((micronutrient_columns,False,'Mean RI fraction'),): #(macronutrient_columns,True)):
         df = pd.concat([loaded_df[GENDER_COLNAME], loaded_df[columns].replace(',', '.',regex=True).astype(float)],axis=1) # necessary as decimal separator in CSV files is a mixture of commas and dots
