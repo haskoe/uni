@@ -20,7 +20,10 @@ def mean_stderr_ref_plot(mean_stderr_df,ref,column_names, mean_std_stderr_column
         x += 1
 
 def percentage_as_str(v1,v2):
-    return  f'{(100*float(v1)/float(v2)):.1f}'
+    return f'{percentage(v1,v2):.1f}'
+
+def percentage(v1,v2):
+    return 100*float(v1)/float(v2)
 
 def read_csv(fname,sep='\t'):
     return pd.read_csv(path.join(data_dir,fname),sep=sep)
@@ -84,7 +87,10 @@ exclude = {
 
 df_below_data = dict([(c,[]) for c in micronutrient_columns])
 studies = ('ffq','24-hour','4-days')
+df_dam_charts = []
 for study in studies:
+    below_above = []
+
     loaded_df = read_csv(f'{study}.csv')
     loaded_df[STUDENT_NO_COLNAME] = loaded_df[STUDENT_NO_COLNAME].astype(str)
     loaded_df[GENDER_COLNAME] = loaded_df[GENDER_COLNAME].map(lambda v: v.strip().lower())
@@ -106,15 +112,22 @@ for study in studies:
             df[fraction_column] = df[column] / df_student_ri
             df_frac_notna = df[df[fraction_column].notna()==True]
             if identical_ri:
+                below_above.append([f'{column} Both',below,100-below])
                 below = len(df_frac_notna[df_frac_notna[fraction_column]<1])
+                total = len(df_frac_notna)
+                p = percentage(below,total)
                 df_below_data[column].append(f'Same RI: {below}/{total}={percentage_as_str(below,total)}%')
             else:
                 res =[]
                 for gender in (FEMALE, MALE):
                     below = len(df_frac_notna[(df_frac_notna[GENDER_COLNAME]==gender) & (df_frac_notna[fraction_column]<1)])
                     total = len(df_frac_notna[df_frac_notna[GENDER_COLNAME]==gender])
+                    p = percentage(below,total)
+                    below_above.append([f'{column} {gender}',p,100-p])
                     res.append(f'{gender}: {below}/{total}={percentage_as_str(below,total)}%')
                 df_below_data[column].append(', '.join(res))
+        df_dam_charts.append((f'DAM chart {study}', pd.DataFrame(columns = ['Nutrient','Below RI','Above RI'], data = below_above)))
+
 
         # calculate mean, STDDEV_COLNAME and stderr
         mean_std_df = df[fraction_columns].describe().loc[[MEAN_COLNAME,STDDEV_COLNAME]].T
@@ -130,3 +143,8 @@ data = [[c] + df_below_data[c] for c in columns]
 df_below_ri = pd.DataFrame(columns = ['Nutrient'] + list(studies), data = data)
 print('DAM methods')
 print(df_below_ri)
+
+print('DAM charts')
+for t,df in df_dam_charts:
+    ax = df.plot(x = 'Nutrient', y=['Below RI','Above RI'], stacked=True, ylim = (0,100), kind ='barh', title=t)
+    plt.show()
