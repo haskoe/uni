@@ -2,6 +2,7 @@
 library(dplyr)
 
 STUD_NR <- "Stud_Nr"
+STUDY <- "Study"
 SEX <- "Sex"
 TOTAL_ENERGY <- "Total energy"
 RI_FRAC <- "RI fraction"
@@ -18,11 +19,11 @@ micronutrient_cols <- c("B1.Thiamine.mg","B2.Riboflavin.mg","B3.Niacin.mg","B5.P
 macronutrient_cols <- c("Alcohol.g","Protein.g","Carbs.g","Fat.g")
 
 col_subset <- c(STUD_NR, SEX)
+res <- df_empty
 for (study in studies) {
   df_csv  <- read.csv(paste(study,".csv",sep=""), sep = "\t", dec=".", strip.white=TRUE)
   
   # res: Stud_Nr, Sex, Nutrient, RI factor
-  res <- df_empty
   
   # ugly
   calculate_energy <- TRUE
@@ -57,13 +58,14 @@ for (study in studies) {
         tmp[colname] <- tmp[colname] / tmp[TOTAL_ENERGY] 
       }
     }
-  
+    
     # append rows to resulting dataframe for each nutrient
     for (colname in output_cols) {
-      res <- rbind(res, cbind(tmp[c(STUD_NR,SEX)],colname,tmp[colname]))
+      res <- rbind(res, setNames( cbind(tmp[c(STUD_NR,SEX)],study,colname,tmp[colname]), names(res)))
+                   #View(cbind(tmp[c(STUD_NR,SEX)],colname,tmp[colname]))
     }
+    calculate_energy <- FALSE
   }
-  calculate_energy <- FALSE
   
 #  barplot(t(as.matrix(res[output_cols])), beside=TRUE)
 }
