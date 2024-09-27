@@ -4,7 +4,9 @@ library(dplyr)
 ri <- read.csv("ri-denorm.csv", sep = "\t", dec=".", strip.white=TRUE)
 
 studies <- list("ffq", "24-hour", "4-days")
+#studies <- list("4-days")
 cols <- list("B1.Thiamine.mg","B2.Riboflavin.mg","B3.Niacin.mg","B5.Pantothenic.Acid.mg","B6.Pyridoxine.mg","B12.Cobalamin.µg")
+#cols <- list("B12.Cobalamin.µg")
 
 l_df_studies <- list()
 for (study in studies) {
@@ -21,7 +23,6 @@ for (study in studies) {
     tmp <-df_csv %>% select(col_subset)
     
     joined <- dplyr::left_join(tmp, ref, by = "Sex", keep = TRUE)
-    res[colname_frac] <- joined[colname] * joined$Refvalue
+    res[colname_frac] <- joined[colname] / joined$Refvalue
   }
 }
-View(joined)
