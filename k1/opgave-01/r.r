@@ -20,7 +20,7 @@ for (study in studies) {
     df <- X4_days %>% select(col_subset)
     
     joined <- dplyr::left_join(df, ref, by = "Sex", keep = TRUE)
-    joined$frac <- joined$ * joined$Refvalue
+    joined$frac <- joined$v * joined$Refvalue
     View(joined)
   }
 }
