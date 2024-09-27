@@ -12,7 +12,6 @@ studies <- list("ffq", "24-hour", "4-days")
 micronutrient_cols <- c("B1.Thiamine.mg","B2.Riboflavin.mg","B3.Niacin.mg","B5.Pantothenic.Acid.mg","B6.Pyridoxine.mg","B12.Cobalamin.µg")
 macronutrient_cols <- c("Alcohol.g","Protein.g","Carbs.g","Fat.g")
 
-l_df_studies <- list()
 for (study in studies) {
   df_csv  <- read.csv(paste(study,".csv",sep=""), sep = "\t", dec=".", strip.white=TRUE)
   res <- df_csv["Sex"]
