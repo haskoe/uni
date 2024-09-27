@@ -79,7 +79,8 @@ for (study in studies) {
     
     nutrient_type <- MICRO
   }
-
+  #write.xlsx(res, "pivot.include.xlsx", sheetName = "All", 
+  #           col.names = TRUE, row.names = TRUE, append = FALSE)
   write.csv( res, "pivot.csv")
   #grouped <- res %>% group_by_at(c(STUDY,SEX,NUTRIENT))
 #  friendly_plot <- grouped %>%  ggplot()
