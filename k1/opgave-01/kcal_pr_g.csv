@@ -1,6 +1,7 @@
-Alcohol (g);6.9
-Carbs (g);4
-Protein (g);4
-Fat (g);9
-Starch (g);4
-Fiber (g);2
+macronutrient;toenergyfactor
+Alcohol g;6.9
+Carbs g;4
+Protein g;4
+Fat g;9
+Starch g;4
+Fiber g;2
