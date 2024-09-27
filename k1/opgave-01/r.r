@@ -41,7 +41,7 @@ for (study in studies) {
     }
     if (calculate_energy) {
       # calculate total energy
-      res[TOTAL_ENERGY] <- sum(select(res,output_cols))
+      res[TOTAL_ENERGY] <- rowSums(res[,output_cols])
       
       # and fractions of total energy
       for (colname in cols) {
