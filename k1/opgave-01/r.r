@@ -1,10 +1,15 @@
 #library(readr)
 library(dplyr)
 
+STUD_NR <- "Stud_Nr"
 SEX <- "Sex"
 TOTAL_ENERGY <- "Total energy"
+RI_FRAC <- "RI fraction"
+NUTRIENT <- "Nutrient"
 
 ri <- read.csv("ri-denorm.csv", sep = "\t", dec=".", strip.white=TRUE)
+df_res <- read.csv("new-empty.csv", sep = "\t", dec=".", strip.white=TRUE)
+
 df_energy_conv_factor <- read.csv("kcal_pr_g.csv", sep = ";", dec=".", strip.white=TRUE)
 energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
 
@@ -14,7 +19,9 @@ macronutrient_cols <- c("Alcohol.g","Protein.g","Carbs.g","Fat.g")
 
 for (study in studies) {
   df_csv  <- read.csv(paste(study,".csv",sep=""), sep = "\t", dec=".", strip.white=TRUE)
-  res <- df_csv["Sex"]
+  
+  # res: Stud_Nr, Sex, Nutrient, RI factor
+  res <- df_res
   
   # ugly
   calculate_energy <- TRUE
@@ -25,30 +32,35 @@ for (study in studies) {
       output_cols <- append( output_cols, colname_frac)
       colname_space <- gsub("\\.", " ", colname)
       
-      col_subset <- c("Sex", colname)
+      col_subset <- c(STUD_NR, SEX, colname)
       tmp <-df_csv %>% select(col_subset)
       if (calculate_energy) {
         # in-place calculation of energy
-        res[colname_frac] <- tmp[colname] * energy_conv_factor[colname_space]
+        tmp[colname_frac] <- tmp[colname] * energy_conv_factor[colname_space]
       }
       else {
         # filter ri to get values only for selected nutrient
         ref <- ri[ri$Refname == colname_space,]
   
         joined <- dplyr::left_join(tmp, ref, by = "Sex", keep = TRUE)
-        res[colname_frac] <- joined[colname] / joined$Refvalue
+        tmp[colname_frac] <- joined[colname] / joined$Refvalue
       }
     }
     if (calculate_energy) {
       # calculate total energy
-      res[TOTAL_ENERGY] <- rowSums(res[,output_cols])
+      tmp[TOTAL_ENERGY] <- rowSums(tmp[,output_cols])
       
       # and fractions of total energy
-      for (colname in cols) {
-        colname_frac <- paste(colname,"f",sep="")
-        res[colname_frac] <- res[colname_frac] / res[TOTAL_ENERGY] 
+      for (colname in output_cols) {
+        tmp[colname] <- tmp[colname] / tmp[TOTAL_ENERGY] 
       }
     }
-    calculate_energy <- FALSE
-  }
+
+    # append rows to resulting dataframe for each nutrient
+    for (colname in output_cols) {
+      res <- rbind(res, cbind(tmp[c(STUD_NR,SEX)],colname,tmp[colname]))
+    }
+  }  
+  barplot(t(as.matrix(res[output_cols])), beside=TRUE)
+  calculate_energy <- FALSE
 }
