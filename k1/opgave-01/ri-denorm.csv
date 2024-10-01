@@ -43,3 +43,11 @@ female	recommended	Sodium mg	1.5
 male	recommended	Sodium mg	1.5
 female	recommended	Zinc mg	9
 male	recommended	Zinc mg	11
+female	recommended	Alcohol g	0.01
+male	recommended	Alcohol g	0.01
+female	recommended	Protein g	0.15
+male	recommended	Protein g	0.15
+female	recommended	Carbs g	0.52
+male	recommended	Carbs g	0.52
+female	recommended	Fat g	0.32
+male	recommended	Fat g	0.32
