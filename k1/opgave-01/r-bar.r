@@ -64,7 +64,7 @@ df_energy_conv_factor <- read.csv("kcal_pr_g.csv", sep = ";", dec=".", strip.whi
 energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
 
 studies <- list("ffq", "24-hour", "4-days")
-micronutrient_cols <- c("B1 Thiamine mg","B2 Riboflavin mg","B3 Niacin mg","B5 Pantothenic Acid mg","B6 Pyridoxine mg") #,"B12 Cobalamin µg") #,"Folate µg","Vitamin A µg","Vitamin C mg","Vitamin D IU","Vitamin E mg","Vitamin K µg","Calcium mg","Copper mg","Iron mg","Magnesium mg","Manganese mg","Phosphorus mg","Potassium mg","Selenium µg","Sodium mg","Zinc mg")
+micronutrient_cols <- c("B1 Thiamine mg","B2 Riboflavin mg","B3 Niacin mg","B5 Pantothenic Acid mg","B6 Pyridoxine mg","B12 Cobalamin µg","Folate µg","Vitamin A µg") #,"Vitamin C mg","Vitamin D IU","Vitamin E mg","Vitamin K µg","Calcium mg","Copper mg","Iron mg","Magnesium mg","Manganese mg","Phosphorus mg","Potassium mg","Selenium µg","Sodium mg","Zinc mg")
 macronutrient_cols <- c("Alcohol g","Protein g","Carbs g","Fat g")
 
 study <- "ffq"
@@ -78,10 +78,12 @@ pivot <- df_ri_micro |> pivot_longer(micronutrient_cols)
 df_grouped_by_sex_nutrient <- pivot %>%
   group_by(Sex, name) %>% 
   summarize(
+    n = sum(!is.na(value)),
     mean = mean(value,na.rm=TRUE),
-    sd = sd(value, na.rm = TRUE))
+    sd = sd(value, na.rm = TRUE),
+    se = sd/sqrt(n))
 
 ggplot(df_grouped_by_sex_nutrient, aes(fill=Sex, y=mean, x=name)) +
   geom_bar(position='dodge', stat='identity') +
-  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2, position=position_dodge(1))
+  geom_errorbar(aes(ymin=mean-se, ymax=mean+se), width=.2, position=position_dodge(1))
 
