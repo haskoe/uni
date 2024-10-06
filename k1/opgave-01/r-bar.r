@@ -77,7 +77,11 @@ pivot <- df_ri_micro |> pivot_longer(micronutrient_cols)
 
 df_grouped_by_sex_nutrient <- pivot %>%
   group_by(Sex, name) %>% 
-  summarize(mean = mean(value,na.rm=TRUE))
+  summarize(
+    mean = mean(value,na.rm=TRUE),
+    sd = sd(value, na.rm = TRUE))
 
 ggplot(df_grouped_by_sex_nutrient, aes(fill=Sex, y=mean, x=name)) +
-  geom_bar(position='dodge', stat='identity')
+  geom_bar(position='dodge', stat='identity') +
+  geom_errorbar(aes(ymin=mean-sd, ymax=mean+sd), width=.2, position=position_dodge(1))
+
