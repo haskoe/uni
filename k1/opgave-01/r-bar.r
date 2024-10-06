@@ -75,13 +75,9 @@ df_ri_micro <- ri_fraction_micro(df,micronutrient_cols,fixed_cols,ri_ref_values)
 
 pivot <- df_ri_micro |> pivot_longer(micronutrient_cols)
 
-pivot |> 
-  ggplot(aes(x = Sex, y = value, fill = name))
+df_grouped_by_sex_nutrient <- pivot %>%
+  group_by(Sex, name) %>% 
+  summarize(mean = mean(value,na.rm=TRUE))
 
-pivot |> 
-  ggplot(aes(x = interaction(Sex, name), y = value, fill = name)) +   
-  # Implement a grouped bar chart
-  geom_bar(position = "dodge", stat = "identity")
-
-# check that energy fractions sums to 1
-# print(rowSums(df_ri_macro[,macronutrient_cols]))
+ggplot(df_grouped_by_sex_nutrient, aes(fill=Sex, y=mean, x=name)) +
+  geom_bar(position='dodge', stat='identity')
