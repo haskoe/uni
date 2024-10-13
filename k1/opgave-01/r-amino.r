@@ -28,15 +28,10 @@ get_url <- function(filename_wo_extension){
   return (paste('https://raw.githubusercontent.com/haskoe/uni/refs/heads/main/k1/opgave-01/', filename_wo_extension, '.csv', sep=''))
 }
 
-get_study_result <- function(study_name) {
+get_study_result <- function(study_name, df_ref, energy_conv_factor) {
   df <- read.csv(get_url(paste(study_name,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  
-  df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  
-  df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
-  energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
 
-  # calculations:
+    # calculations:
   #   a) macro: 1) energy for each nutrient, 2) sum of energy and 3) fraction of total energy for each nutrient
   #   b) micro: N/A
   #   c) amino acids: intake / protein intake in grams (should be sufficient because it is the protein composition that is of interest)
@@ -77,9 +72,14 @@ get_study_result <- function(study_name) {
   return (tmp)
 }
 
+df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+
+df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
+energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
+
 FFQ <- "ffq"
 H24 <- "24-hour"
 D4 <- "4-days"
 
-df_h24 <- get_study_result(H24)
+df_h24 <- get_study_result(H24, df_ref, energy_conv_factor)
 
