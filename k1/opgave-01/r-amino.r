@@ -24,17 +24,23 @@ nutrient_list_by_type <- function(ref, nutrient_type) {
   return ((ref %>% filter(Nutrienttype == nutrient_type) %>% select(Refname) %>% distinct())[,1])
 }
 
+get_url <- function(filename_wo_extension){
+  return (paste('https://raw.githubusercontent.com/haskoe/uni/refs/heads/main/k1/opgave-01/', filename_wo_extension, '.csv', sep=''))
+}
+
 get_study_result <- function(study_name) {
-  url <- paste('https://raw.githubusercontent.com/haskoe/uni/refs/heads/main/k1/opgave-01/', study_name, '.fixed.csv', sep='')
-  df <- read.csv(url, sep = "\t", dec=".", strip.white=TRUE)
+  df <- read.csv(get_url(paste(study_name,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  
+  df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  
+  df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
+  energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
 
   # calculations:
   #   a) macro: 1) energy for each nutrient, 2) sum of energy and 3) fraction of total energy for each nutrient
   #   b) micro: N/A
   #   c) amino acids: intake / protein intake in grams (should be sufficient because it is the protein composition that is of interest)
   # compare a, b and c with recommended value in ri-denorm.csv
-  
-  df_ref <- read.csv("ri-denorm.csv", sep = "\t", dec=".", strip.white=TRUE)
   
   # dictionary to lookup reference value with key: <gender>SPACE<Refname>, e.g "female Vitamin E mg"
   ref_dict <- with(as_tibble(df_ref %>% select(Sex,Refname,Refvalue) %>% mutate(key=paste(Sex,Refname))), setNames(Refvalue, key))
