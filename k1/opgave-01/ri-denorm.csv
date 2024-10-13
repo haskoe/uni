@@ -1,53 +1,73 @@
-Sex	Ref type	Refname	Refvalue
-female	recommended	B1 Thiamine mg	0.9
-male	recommended	B1 Thiamine mg	1.1
-female	recommended	B2 Riboflavin mg	1.6
-male	recommended	B2 Riboflavin mg	1.6
-female	recommended	B3 Niacin mg	14
-male	recommended	B3 Niacin mg	18
-female	recommended	B5 Pantothenic Acid mg	5
-male	recommended	B5 Pantothenic Acid mg	5
-female	recommended	B6 Pyridoxine mg	1.6
-male	recommended	B6 Pyridoxine mg	1.8
-female	recommended	B12 Cobalamin µg	4
-male	recommended	B12 Cobalamin µg	4
-female	recommended	Folate µg	330
-male	recommended	Folate µg	300
-female	recommended	Vitamin A µg	700
-male	recommended	Vitamin A µg	800
-female	recommended	Vitamin C mg	95
-male	recommended	Vitamin C mg	110
-female	recommended	Vitamin D IU	10
-male	recommended	Vitamin D IU	10
-female	recommended	Vitamin E mg	10
-male	recommended	Vitamin E mg	10
-female	recommended	Vitamin K µg	65
-male	recommended	Vitamin K µg	75
-female	recommended	Calcium mg	950
-male	recommended	Calcium mg	950
-female	recommended	Copper mg	900
-male	recommended	Copper mg	900
-female	recommended	Iron mg	15
-male	recommended	Iron mg	9
-female	recommended	Magnesium mg	300
-male	recommended	Magnesium mg	350
-female	recommended	Manganese mg	3
-male	recommended	Manganese mg	3
-female	recommended	Phosphorus mg	520
-male	recommended	Phosphorus mg	520
-female	recommended	Potassium mg	3500
-male	recommended	Potassium mg	3500
-female	recommended	Selenium µg	75
-male	recommended	Selenium µg	90
-female	recommended	Sodium mg	1.5
-male	recommended	Sodium mg	1.5
-female	recommended	Zinc mg	9
-male	recommended	Zinc mg	11
-female	recommended	Alcohol g	0.01
-male	recommended	Alcohol g	0.01
-female	recommended	Protein g	0.15
-male	recommended	Protein g	0.15
-female	recommended	Carbs g	0.52
-male	recommended	Carbs g	0.52
-female	recommended	Fat g	0.32
-male	recommended	Fat g	0.32
+Sex	Nutrienttype	Reftype	Refname	Refvalue
+female	micro	recommended	B1 Thiamine mg	0.9
+male	micro	recommended	B1 Thiamine mg	1.1
+female	micro	recommended	B2 Riboflavin mg	1.6
+male	micro	recommended	B2 Riboflavin mg	1.6
+female	micro	recommended	B3 Niacin mg	14
+male	micro	recommended	B3 Niacin mg	18
+female	micro	recommended	B5 Pantothenic Acid mg	5
+male	micro	recommended	B5 Pantothenic Acid mg	5
+female	micro	recommended	B6 Pyridoxine mg	1.6
+male	micro	recommended	B6 Pyridoxine mg	1.8
+female	micro	recommended	B12 Cobalamin µg	4
+male	micro	recommended	B12 Cobalamin µg	4
+female	micro	recommended	Folate µg	330
+male	micro	recommended	Folate µg	300
+female	micro	recommended	Vitamin A µg	700
+male	micro	recommended	Vitamin A µg	800
+female	micro	recommended	Vitamin C mg	95
+male	micro	recommended	Vitamin C mg	110
+female	micro	recommended	Vitamin D IU	10
+male	micro	recommended	Vitamin D IU	10
+female	micro	recommended	Vitamin E mg	10
+male	micro	recommended	Vitamin E mg	10
+female	micro	recommended	Vitamin K µg	65
+male	micro	recommended	Vitamin K µg	75
+female	micro	recommended	Calcium mg	950
+male	micro	recommended	Calcium mg	950
+female	micro	recommended	Copper mg	900
+male	micro	recommended	Copper mg	900
+female	micro	recommended	Iron mg	15
+male	micro	recommended	Iron mg	9
+female	micro	recommended	Magnesium mg	300
+male	micro	recommended	Magnesium mg	350
+female	micro	recommended	Manganese mg	3
+male	micro	recommended	Manganese mg	3
+female	micro	recommended	Phosphorus mg	520
+male	micro	recommended	Phosphorus mg	520
+female	micro	recommended	Potassium mg	3500
+male	micro	recommended	Potassium mg	3500
+female	micro	recommended	Selenium µg	75
+male	micro	recommended	Selenium µg	90
+female	micro	recommended	Sodium mg	1.5
+male	micro	recommended	Sodium mg	1.5
+female	micro	recommended	Zinc mg	9
+male	micro	recommended	Zinc mg	11
+female	macro	recommended	Alcohol g	0.01
+male	macro	recommended	Alcohol g	0.01
+female	macro	recommended	Protein g	0.15
+male	macro	recommended	Protein g	0.15
+female	macro	recommended	Carbs g	0.52
+male	macro	recommended	Carbs g	0.52
+female	macro	recommended	Fat g	0.32
+male	macro	recommended	Fat g	0.32
+female	amino acid	recommended	Lysine g	0.048
+male	amino acid	recommended	Lysine g	0.048
+female	amino acid	recommended	Leucine g	0.061
+male	amino acid	recommended	Leucine g	0.061
+female	amino acid	recommended	Isoleucine g	0.03
+male	amino acid	recommended	Isoleucine g	0.03
+female	amino acid	recommended	Valine g	0.04
+male	amino acid	recommended	Valine g	0.04
+female	amino acid	recommended	Tyrosine g	0.041
+male	amino acid	recommended	Tyrosine g	0.041
+female	amino acid	recommended	Phenyl-alanine g	0.041
+male	amino acid	recommended	Phenyl-alanine g	0.041
+female	amino acid	recommended	Tryptophan g	0.0066
+male	amino acid	recommended	Tryptophan g	0.0066
+female	amino acid	recommended	Histidine g	0.016
+male	amino acid	recommended	Histidine g	0.016
+female	amino acid	recommended	Cystine g	0.023
+male	amino acid	recommended	Cystine g	0.023
+female	amino acid	recommended	Methionine g	0.023
+male	amino acid	recommended	Methionine g	0.023
