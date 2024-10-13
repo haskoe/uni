@@ -28,18 +28,18 @@ get_url <- function(filename_wo_extension){
   return (paste('https://raw.githubusercontent.com/haskoe/uni/refs/heads/main/k1/opgave-01/', filename_wo_extension, '.csv', sep=''))
 }
 
-get_study_result <- function(study_name, df_ref, energy_conv_factor) {
+# format. we want to end with this
+# stud.nr, sex, study, nutrienttype, nutrient, calc. value, fraction of ref.
+#
+# calc, vlkue:
+#   a) macro: 1) energy for each nutrient, 2) sum of energy and 3) fraction of total energy for each nutrient
+#   b) micro: N/A
+#   c) amino acids: intake / protein intake in grams (should be sufficient because it is the protein composition that is of interest)
+# compare a, b and c with recommended value in ri-denorm.csv
+
+get_study_result <- function(df, study_name, df_ref, energy_conv_factor) {
   df <- read.csv(get_url(paste(study_name,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
 
-    # calculations:
-  #   a) macro: 1) energy for each nutrient, 2) sum of energy and 3) fraction of total energy for each nutrient
-  #   b) micro: N/A
-  #   c) amino acids: intake / protein intake in grams (should be sufficient because it is the protein composition that is of interest)
-  # compare a, b and c with recommended value in ri-denorm.csv
-  
-  # dictionary to lookup reference value with key: <gender>SPACE<Refname>, e.g "female Vitamin E mg"
-  ref_dict <- with(as_tibble(df_ref %>% select(Sex,Refname,Refvalue) %>% mutate(key=paste(Sex,Refname))), setNames(Refvalue, key))
-  
   all_nutrients <- (df_ref %>% select(Refname) %>% distinct())[,1]
   
   # macro dataframe with fraction of energy intake for each nutrient
@@ -72,14 +72,17 @@ get_study_result <- function(study_name, df_ref, energy_conv_factor) {
   return (tmp)
 }
 
-df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+get_studies_combined_dataframe <- function() {
+  df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  
+  df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
+  energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
+  
+  res <-get_study_result(read.csv(get_url(paste("ffq",'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE), "ffq", df_ref, energy_conv_factor)
+  for (study_name in c("24-hour","4-days")) {
+    res <- rbind(res,get_study_result(read.csv(get_url(paste(study_name,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE), study_name, df_ref, energy_conv_factor))
+  }
+  return (res)
+}
 
-df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
-energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
-
-FFQ <- "ffq"
-H24 <- "24-hour"
-D4 <- "4-days"
-
-df_h24 <- get_study_result(H24, df_ref, energy_conv_factor)
-
+df <- get_studies_combined_dataframe()
