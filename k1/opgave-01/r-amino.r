@@ -113,15 +113,24 @@ get_studies_combined_dataframe <- function() {
   
   res <- df_empty
   res <- rbind( res, get_study_result( df_ffq , FFQ, df_ref, df_empty, energy_conv_factor))
-  #res <- rbind( res, get_study_result( df_24h , H24, df_ref, df_empty, energy_conv_factor))
-  #res <- rbind( res, get_study_result( df_4d , D4, df_ref, df_empty, energy_conv_factor))
+  res <- rbind( res, get_study_result( df_24h , H24, df_ref, df_empty, energy_conv_factor))
+  res <- rbind( res, get_study_result( df_4d , D4, df_ref, df_empty, energy_conv_factor))
 
   return (res)
 }
 
-#df <- get_studies_combined_dataframe()
+df <- get_studies_combined_dataframe()
 
-ggplot(
-  data = df %>% filter(Nutrienttype == MACRO),
-  mapping = aes(x = Stud_Nr, y = RI)) +
-  geom_bar(stat="identity")
+
+# bar plot mean amino acid RI for groups female and male in study FFW
+df_amino_ffq <- df %>% filter(Study == FFQ, Nutrienttype == AMINO_ACIDS) 
+ggplot( df_amino_ffq
+  %>% group_by(Sex, Nutrient)
+  %>% summarise( 
+    n = sum(!is.na(RI_ref)), 
+    mean = mean(RI_ref, na.rm = TRUE), 
+    se = sd(RI_ref, na.rm = TRUE) / sqrt(n)),
+  aes(x = Nutrient, y = mean, fill = Sex)) +
+geom_bar(stat = "identity", position = position_dodge(0.9)) + 
+geom_errorbar(aes(ymin = mean-se, ymax = mean+se), 
+  position = position_dodge(.9), width = 0.3)
