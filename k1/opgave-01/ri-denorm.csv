@@ -51,14 +51,6 @@ female	micro	recommended	Sodium mg	1.5
 male	micro	recommended	Sodium mg	1.5
 female	micro	recommended	Zinc mg	9
 male	micro	recommended	Zinc mg	11
-female	macro	recommended	Alcohol g	0.01
-male	macro	recommended	Alcohol g	0.01
-female	macro	recommended	Protein g	0.15
-male	macro	recommended	Protein g	0.15
-female	macro	recommended	Carbs g	0.52
-male	macro	recommended	Carbs g	0.52
-female	macro	recommended	Fat g	0.32
-male	macro	recommended	Fat g	0.32
 female	amino acid	recommended	Lysine g	0.048
 male	amino acid	recommended	Lysine g	0.048
 female	amino acid	recommended	Leucine g	0.061

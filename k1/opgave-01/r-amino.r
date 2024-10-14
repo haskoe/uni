@@ -104,21 +104,16 @@ get_study_result <- function(df, study_name, df_ref, energy_conv_factor) {
 }
 
 get_studies_combined_dataframe <- function() {
-  #df_empty <- read.csv(get_url("new-empty"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  #df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  #df_ffq <- read.csv(get_url(paste(FFQ,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  #df_24h <- read.csv(get_url(paste(H24,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  #df_4d <- read.csv(get_url(paste(D4,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_empty <- read.csv(get_url("new-empty"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
   
-  df_ffq <- read.csv(paste(FFQ,'.fixed.csv',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  df_24h <- read.csv(paste(H24,'.fixed.csv',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  df_4d <- read.csv(paste(D4,'.fixed.csv',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  df_ref <- read.csv("ri-denorm.csv", sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-  df_empty <- read.csv("new-empty.csv", sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
-
+  df_ffq <- read.csv(get_url(paste(FFQ,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_24h <- read.csv(get_url(paste(H24,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_4d <- read.csv(get_url(paste(D4,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  
   res <- get_study_result( df_ffq , FFQ, df_ref, energy_conv_factor)
-  #res <- rbind( res, get_study_result( df_24h , H24, df_ref, energy_conv_factor))
-  #res <- rbind( res, get_study_result( df_4d , D4, df_ref, energy_conv_factor))
+  res <- rbind( res, get_study_result( df_24h , H24, df_ref, energy_conv_factor))
+  res <- rbind( res, get_study_result( df_4d , D4, df_ref, energy_conv_factor))
 
   return (res)
 }
