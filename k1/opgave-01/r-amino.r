@@ -10,7 +10,7 @@ TOTAL_ENERGY <- "Total energy"
 TOTAL_ENERGY_RI <- "Total energy RI"
 TOTAL_ENERGY_RI_REF <- "Total energy RI	RI ref"
 RI <- "RI"
-RI_FRAC <- "RI ref"
+RI_FRAC <- "RI_ref"
 NUTRIENT <- "Nutrient"
 NUTRIENT_TYPE <- "Nutrienttype"
 BMR <- "BMR kcal"
@@ -43,7 +43,7 @@ get_url <- function(filename_wo_extension){
 #   c) amino acids: intake / protein intake in grams (should be sufficient because it is the protein composition that is of interest)
 # compare a, b and c with recommended value in ri-denorm.csv
 
-get_study_result <- function(df, study_name, df_ref, energy_conv_factor) {
+get_study_result <- function(df, study_name, df_ref, df_empty, energy_conv_factor) {
   df_res <- df_empty
 
   all_nutrients <- (df_ref %>% select(Nutrient) %>% distinct())[,1]
@@ -111,12 +111,17 @@ get_studies_combined_dataframe <- function() {
   df_24h <- read.csv(get_url(paste(H24,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
   df_4d <- read.csv(get_url(paste(D4,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
   
-  res <- get_study_result( df_ffq , FFQ, df_ref, energy_conv_factor)
-  res <- rbind( res, get_study_result( df_24h , H24, df_ref, energy_conv_factor))
-  res <- rbind( res, get_study_result( df_4d , D4, df_ref, energy_conv_factor))
+  res <- df_empty
+  res <- rbind( res, get_study_result( df_ffq , FFQ, df_ref, df_empty, energy_conv_factor))
+  #res <- rbind( res, get_study_result( df_24h , H24, df_ref, df_empty, energy_conv_factor))
+  #res <- rbind( res, get_study_result( df_4d , D4, df_ref, df_empty, energy_conv_factor))
 
   return (res)
 }
 
-df <- get_studies_combined_dataframe()
-#print(df)
+#df <- get_studies_combined_dataframe()
+
+ggplot(
+  data = df %>% filter(Nutrienttype == MACRO),
+  mapping = aes(x = Stud_Nr, y = RI)) +
+  geom_bar(stat="identity")
