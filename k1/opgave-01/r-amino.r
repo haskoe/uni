@@ -8,7 +8,9 @@ SEX <- "Sex"
 PROTEIN <- "Protein g"
 TOTAL_ENERGY <- "Total energy"
 TOTAL_ENERGY_RI <- "Total energy RI"
-RI_FRAC <- "RI"
+TOTAL_ENERGY_RI_REF <- "Total energy RI	RI ref"
+RI <- "RI"
+RI_FRAC <- "RI ref"
 NUTRIENT <- "Nutrient"
 NUTRIENT_TYPE <- "Nutrienttype"
 BMR <- "BMR kcal"
@@ -17,11 +19,15 @@ MACRO <- "macro"
 MICRO <- "micro"
 AMINO_ACIDS <- "amino acid"
 
-fixed_cols <- c(STUD_NR, SEX, BMR)
+FFQ <- "ffq"
+H24 <- "24-hour"
+D4 <- "4-days"
+
+fixed_cols <- c(STUD_NR, SEX)
 our_group <- c(8,19,34,35,66)
 
 nutrient_list_by_type <- function(ref, nutrient_type) {
-  return ((ref %>% filter(Nutrienttype == nutrient_type) %>% select(Refname) %>% distinct())[,1])
+  return ((ref %>% filter(Nutrienttype == nutrient_type) %>% select(Nutrient) %>% distinct())[,1])
 }
 
 get_url <- function(filename_wo_extension){
@@ -38,51 +44,84 @@ get_url <- function(filename_wo_extension){
 # compare a, b and c with recommended value in ri-denorm.csv
 
 get_study_result <- function(df, study_name, df_ref, energy_conv_factor) {
-  df <- read.csv(get_url(paste(study_name,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_res <- df_empty
 
-  all_nutrients <- (df_ref %>% select(Refname) %>% distinct())[,1]
+  all_nutrients <- (df_ref %>% select(Nutrient) %>% distinct())[,1]
+
+  # macro calculation
+  nutrient_cols <- nutrient_list_by_type(df_ref,MACRO)
+  tmp <- df %>% select(all_of(fixed_cols))
+  tmp[STUDY] = study_name
+  tmp[NUTRIENT_TYPE] = MACRO
   
-  # macro dataframe with fraction of energy intake for each nutrient
-  tmp <- df %>% select(fixed_cols)
-  for (colname in nutrient_list_by_type(df_ref,MACRO)) {
-    tmp[colname] <- df[colname] * energy_conv_factor[colname]
+  # calculate energy from each macro nutrient
+  for (nutrient_name in nutrient_cols) {
+    tmp[nutrient_name] <- df[nutrient_name] * energy_conv_factor[nutrient_name]
   }
+  
+  # total energy
   tmp[TOTAL_ENERGY] <- rowSums(tmp[,nutrient_cols])
-  tmp[TOTAL_ENERGY_RI] <- tmp[TOTAL_ENERGY] / tmp[BMR]
-  for (colname in nutrient_list_by_type(ref,MACRO)) {
-    tmp[colname] <- tmp[colname] / tmp[TOTAL_ENERGY] 
+  
+  # fraction of total energy for each macro nutrient
+  for (nutrient_name in nutrient_cols) {
+   tmp[nutrient_name] <- tmp[nutrient_name] / tmp[TOTAL_ENERGY] 
   }
   
-  for (colname in nutrient_list_by_type(df_ref,MICRO)) {
-    tmp[colname] <- df[colname]
+  # fraction of total energy needed for each subject
+  #tmp[TOTAL_ENERGY_RI] <- tmp[TOTAL_ENERGY] / df[BMR] 
+
+  # add pivoted macro dataframe to resulting
+  df_res <- rbind(df_res,pivot_longer(tmp %>% select(!c(TOTAL_ENERGY)),nutrient_cols))
+
+  # micro nutrients are appended w/o modification
+  # we are repeating code here !!
+  nutrient_cols <- nutrient_list_by_type(df_ref,MICRO)
+  tmp <- df %>% select(all_of(fixed_cols))
+  tmp[STUDY] = study_name
+  tmp[NUTRIENT_TYPE] = MICRO
+  for (nutrient_name in nutrient_cols) {
+    tmp[nutrient_name] <- df[nutrient_name]
   }
-  
-  for (colname in nutrient_list_by_type(df_ref,AMINO_ACIDS)) {
-    tmp[colname] <- df[colname] / df[PROTEIN]
+  df_res <- rbind(df_res,pivot_longer(tmp, nutrient_cols))
+
+    # amino acids
+  # we are repeating code here !!
+  nutrient_cols <- nutrient_list_by_type(df_ref,AMINO_ACIDS)
+  tmp <- df %>% select(all_of(fixed_cols))
+  tmp[STUDY] = study_name
+  tmp[NUTRIENT_TYPE] = AMINO_ACIDS
+  for (nutrient_name in nutrient_cols) {
+    tmp[nutrient_name] <- df[nutrient_name] / df[PROTEIN]
   }
-  
-  # calculate fration of reference value
-  for (colname in all_nutrients) {
-    df_ref_nutrient <- df_ref %>% filter(Refname == colname)
-    joined <- dplyr::left_join(tmp, df_ref_nutrient, by = "Sex", keep = TRUE)
-    tmp[paste(colname,"ref")] <- joined[colname] / joined$Refvalue
-  }
-  
-  # resluting dataframe with transformed macro and amino acid values and corresponding fraction of ref. value
-  return (tmp)
+  df_res <- rbind(df_res,pivot_longer(tmp, nutrient_cols))
+  df_res <- df_res %>% rename_at(c("name","value"), ~c(NUTRIENT,RI))
+
+  # we can now calculate fraction of ref. value with join on gender and nutrient
+  joined <- left_join(df_res, df_ref, by = c(SEX,NUTRIENT), keep = TRUE)
+  df_res[RI_FRAC] <- joined[RI] / joined$Refvalue
+
+  return (df_res)
 }
 
 get_studies_combined_dataframe <- function() {
-  df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  #df_empty <- read.csv(get_url("new-empty"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  #df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  #df_ffq <- read.csv(get_url(paste(FFQ,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  #df_24h <- read.csv(get_url(paste(H24,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  #df_4d <- read.csv(get_url(paste(D4,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
   
-  df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
-  energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
-  
-  res <-get_study_result(read.csv(get_url(paste("ffq",'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE), "ffq", df_ref, energy_conv_factor)
-  for (study_name in c("24-hour","4-days")) {
-    res <- rbind(res,get_study_result(read.csv(get_url(paste(study_name,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE), study_name, df_ref, energy_conv_factor))
-  }
+  df_ffq <- read.csv(paste(FFQ,'.fixed.csv',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_24h <- read.csv(paste(H24,'.fixed.csv',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_4d <- read.csv(paste(D4,'.fixed.csv',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_ref <- read.csv("ri-denorm.csv", sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_empty <- read.csv("new-empty.csv", sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+
+  res <- get_study_result( df_ffq , FFQ, df_ref, energy_conv_factor)
+  #res <- rbind( res, get_study_result( df_24h , H24, df_ref, energy_conv_factor))
+  #res <- rbind( res, get_study_result( df_4d , D4, df_ref, energy_conv_factor))
+
   return (res)
 }
 
 df <- get_studies_combined_dataframe()
+#print(df)
