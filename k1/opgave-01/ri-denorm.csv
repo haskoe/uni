@@ -1,4 +1,12 @@
-Sex	Nutrienttype	Reftype	Refname	Refvalue
+Sex	Nutrienttype	Reftype	Nutrient	Refvalue
+female	macro	recommended	Alcohol g	0.01
+male	macro	recommended	Alcohol g	0.01
+female	macro	recommended	Protein g	0.15
+male	macro	recommended	Protein g	0.15
+female	macro	recommended	Carbs g	0.52
+male	macro	recommended	Carbs g	0.52
+female	macro	recommended	Fat g	0.32
+male	macro	recommended	Fat g	0.32
 female	micro	recommended	B1 Thiamine mg	0.9
 male	micro	recommended	B1 Thiamine mg	1.1
 female	micro	recommended	B2 Riboflavin mg	1.6
