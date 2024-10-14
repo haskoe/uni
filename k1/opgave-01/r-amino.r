@@ -31,7 +31,8 @@ nutrient_list_by_type <- function(ref, nutrient_type) {
 }
 
 get_url <- function(filename_wo_extension){
-  return (paste('https://raw.githubusercontent.com/haskoe/uni/refs/heads/main/k1/opgave-01/', filename_wo_extension, '.csv', sep=''))
+  #return (paste('https://raw.githubusercontent.com/haskoe/uni/refs/heads/main/k1/opgave-01/', filename_wo_extension, '.csv', sep=''))
+  return (paste(filename_wo_extension, '.csv', sep=''))
 }
 
 # format. we want to end with this
@@ -104,7 +105,10 @@ get_study_result <- function(df, study_name, df_ref, df_empty, energy_conv_facto
 }
 
 get_studies_combined_dataframe <- function() {
-  df_empty <- read.csv(get_url("new-empty"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
+  df_energy_conv_factor <- read.csv(get_url("kcal_pr_g"), sep = ";", dec=".", strip.white=TRUE)
+  energy_conv_factor <- setNames(as.numeric(df_energy_conv_factor$toenergyfactor),as.character(df_energy_conv_factor$macronutrient))
+
+    df_empty <- read.csv(get_url("new-empty"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
   df_ref <- read.csv(get_url("ri-denorm"), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
   
   df_ffq <- read.csv(get_url(paste(FFQ,'.fixed',sep='')), sep = "\t", dec=".", strip.white=TRUE, check.names=FALSE)
@@ -113,24 +117,31 @@ get_studies_combined_dataframe <- function() {
   
   res <- df_empty
   res <- rbind( res, get_study_result( df_ffq , FFQ, df_ref, df_empty, energy_conv_factor))
-  res <- rbind( res, get_study_result( df_24h , H24, df_ref, df_empty, energy_conv_factor))
-  res <- rbind( res, get_study_result( df_4d , D4, df_ref, df_empty, energy_conv_factor))
+  #res <- rbind( res, get_study_result( df_24h , H24, df_ref, df_empty, energy_conv_factor))
+  #res <- rbind( res, get_study_result( df_4d , D4, df_ref, df_empty, energy_conv_factor))
 
   return (res)
 }
 
 df <- get_studies_combined_dataframe()
 
+df_ffq <- df %>% filter(Study == FFQ)
+
+# bar plot of protein RI_ref by student
+ggplot( df_ffq %>% filter(Nutrient == PROTEIN),
+        aes(x = Stud_Nr, y = RI_ref)) +
+  geom_bar(stat = "identity", position = position_dodge(0.9))
+
 
 # bar plot mean amino acid RI for groups female and male in study FFW
-df_amino_ffq <- df %>% filter(Study == FFQ, Nutrienttype == AMINO_ACIDS) 
+df_amino_ffq <- df %>% filter(Nutrienttype == AMINO_ACIDS) 
 ggplot( df_amino_ffq
-  %>% group_by(Sex, Nutrient)
-  %>% summarise( 
-    n = sum(!is.na(RI_ref)), 
-    mean = mean(RI_ref, na.rm = TRUE), 
-    se = sd(RI_ref, na.rm = TRUE) / sqrt(n)),
-  aes(x = Nutrient, y = mean, fill = Sex)) +
-geom_bar(stat = "identity", position = position_dodge(0.9)) + 
-geom_errorbar(aes(ymin = mean-se, ymax = mean+se), 
-  position = position_dodge(.9), width = 0.3)
+        %>% group_by(Sex, Nutrient)
+        %>% summarise( 
+          n = sum(!is.na(RI_ref)), 
+          mean = mean(RI_ref, na.rm = TRUE), 
+          se = sd(RI_ref, na.rm = TRUE) / sqrt(n)),
+        aes(x = Nutrient, y = mean, fill = Sex)) +
+  geom_bar(stat = "identity", position = position_dodge(0.9)) + 
+  geom_errorbar(aes(ymin = mean-se, ymax = mean+se), 
+                position = position_dodge(.9), width = 0.3)
