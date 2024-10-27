@@ -97,7 +97,7 @@ get_study_result <- function(all_data, df, study_name, nutrient_class, f_value, 
   return (df_res)
 }
 
-get_all_study_result <- function(all_data, nutrient_class, f_value, f_ri) {
+get_all_study_results <- function(all_data, nutrient_class, f_value, f_ri) {
   df_res <- get_study_result( all_data, all_data$df_ffq, FFQ, nutrient_class, f_value, f_ri)
   df_res <- rbind( df_res, get_study_result( all_data, all_data$df_24h, H24, nutrient_class, f_value, f_ri))
   df_res <- rbind( df_res, get_study_result( all_data, all_data$df_4d, D4, nutrient_class, f_value, f_ri))
@@ -110,9 +110,13 @@ plot_df <- function(df) {
           %>% summarise( 
             n = sum(!is.na(RI_ref)), 
             mean = mean(RI_ref, na.rm = TRUE), 
+            min = min(RI_ref, na.rm = TRUE), 
+            max = max(RI_ref, na.rm = TRUE), 
             se = sd(RI_ref, na.rm = TRUE) / sqrt(n)),
           aes(x = Nutrient, y = mean, fill = Sex)) +
     geom_bar(stat = "identity", position = position_dodge(0.9)) + 
     geom_errorbar(aes(ymin = mean-se, ymax = mean+se), 
-                  position = position_dodge(.9), width = 0.3)
+                  position = position_dodge(.9), width = 0.3) +
+    geom_errorbar(aes(ymin = min, ymax = max), 
+                  position = position_dodge(.5), width = 0.3)
 }
